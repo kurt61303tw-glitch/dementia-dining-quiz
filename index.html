@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍱 餐桌找碴＆照護紅綠燈｜飲食照護挑戰</title>
+  <style>
+    :root {
+      --bg-warm: #fdf7ec;
+      --card-bg: #ffffff;
+      --border-warm: #ead9bc;
+      --text-main: #44382e;
+      --text-sub: #766658;
+      --amber: #e29628;
+      --amber-light: #fff6e3;
+      --green: #48855b;
+      --green-bg: #ebf6ee;
+      --orange: #d97724;
+      --orange-bg: #fff2e6;
+      --red: #cf4c4c;
+      --red-bg: #fdeeee;
+      --shadow: 0 10px 26px rgba(95, 72, 42, 0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: linear-gradient(150deg, #fdf7ec 0%, #f1f6f1 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+      line-height: 1.55;
+    }
+
+    .game-shell {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card-bg);
+      border: 2px solid var(--border-warm);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* 頂部 */
+    .header {
+      background: linear-gradient(135deg, #fff1cf 0%, #e7f3ea 100%);
+      padding: 16px 20px 14px;
+      border-bottom: 1.5px solid var(--border-warm);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border-warm);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #8b5615;
+    }
+
+    .cheat-btn {
+      background: #ffffff;
+      border: 1.5px solid #d7c199;
+      color: #6b5132;
+      border-radius: 999px;
+      padding: 4px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .cheat-btn:hover {
+      background: #fff9ec;
+      border-color: var(--amber);
+    }
+
+    .header h1 {
+      font-size: 18.5px;
+      margin-bottom: 3px;
+    }
+
+    .subtitle {
+      font-size: 12.5px;
+      color: var(--text-sub);
+    }
+
+    /* 小抄 */
+    .cheat-sheet {
+      display: none;
+      background: #fffdf7;
+      border-bottom: 1.5px dashed var(--border-warm);
+      padding: 12px 18px;
+      font-size: 12.5px;
+    }
+
+    .cheat-sheet.open {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .cheat-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 460px) {
+      .cheat-cols { grid-template-columns: 1fr; }
+    }
+
+    .cheat-card {
+      background: #ffffff;
+      border: 1px solid #eee0c5;
+      border-radius: 10px;
+      padding: 7px 10px;
+    }
+
+    /* 狀態列 */
+    .body-area {
+      padding: 16px 20px 22px;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
+    .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .combo-badge {
+      background: #fff3d6;
+      color: #a66011;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid #f0d29c;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #f1e8d8;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #e29628, #48855b);
+      transition: width 0.35s ease;
+    }
+
+    /* 關卡標籤 */
+    .mode-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .mode-spot {
+      background: #fff0d8;
+      color: #9e5810;
+    }
+
+    .mode-light {
+      background: #e9f4ec;
+      color: #2d6640;
+    }
+
+    .q-box {
+      background: #fffaf0;
+      border: 1.5px solid #efdcb8;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 13px;
+    }
+
+    .q-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .q-hint {
+      font-size: 12.5px;
+      color: var(--text-sub);
+    }
+
+    /* 餐桌找碴：互動道具格 */
+    .table-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 450px) {
+      .table-grid { grid-template-columns: 1fr; }
+    }
+
+    .item-tile {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: #ffffff;
+      border: 2px solid #e5d8c0;
+      border-radius: 12px;
+      padding: 10px 11px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .item-tile:hover:not(:disabled) {
+      border-color: var(--amber);
+      background: #fffcf5;
+    }
+
+    .item-tile.selected {
+      border-color: #d97724;
+      background: #fff3e3;
+      box-shadow: 0 0 0 2px rgba(217, 119, 36, 0.15);
+    }
+
+    .item-tile.selected::after {
+      content: "🚨 標記NG";
+      position: absolute;
+      top: -8px;
+      right: 8px;
+      background: #d97724;
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    .item-tile.res-missed {
+      border-color: var(--red);
+      background: var(--red-bg);
+    }
+
+    .item-tile.res-missed::after {
+      content: "❗ 漏抓NG";
+      position: absolute;
+      top: -8px;
+      right: 8px;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    .item-tile.res-false {
+      border-color: var(--red);
+      background: #fff4e5;
+    }
+
+    .item-tile.res-false::after {
+      content: "❌ 這項其實OK";
+      position: absolute;
+      top: -8px;
+      right: 8px;
+      background: #b85c14;
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    .item-tile.res-hit {
+      border-color: var(--green);
+      background: var(--green-bg);
+    }
+
+    .item-tile.res-hit::after {
+      content: "✅ 抓對NG";
+      position: absolute;
+      top: -8px;
+      right: 8px;
+      background: var(--green);
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    .item-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* 單選選項（紅綠燈＋對策） */
+    .choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .choice-btn {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #ffffff;
+      border: 2px solid #e5d8c0;
+      border-radius: 13px;
+      padding: 11px 13px;
+      font-size: 13.8px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: all 0.16s ease;
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      border-color: var(--amber);
+      background: #fffaf0;
+      transform: translateY(-1px);
+    }
+
+    .choice-btn.correct {
+      border-color: var(--green);
+      background: var(--green-bg);
+      color: #245232;
+    }
+
+    .choice-btn.wrong {
+      border-color: var(--red);
+      background: var(--red-bg);
+      color: #842929;
+    }
+
+    .choice-btn.dimmed {
+      opacity: 0.52;
+    }
+
+    .check-btn, .next-btn, .restart-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e29628, #cf7e19);
+      color: #ffffff;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 12px rgba(207, 126, 25, 0.25);
+      transition: transform 0.15s ease;
+    }
+
+    .check-btn:hover, .next-btn:hover, .restart-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .check-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 回饋 */
+    .feedback {
+      display: none;
+      margin-top: 13px;
+      border-radius: 13px;
+      padding: 13px 15px;
+      font-size: 13.5px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .feedback.show { display: block; }
+    .feedback.ok { background: var(--green-bg); border: 1.5px solid #b4d6be; color: #244b30; }
+    .feedback.partial { background: var(--orange-bg); border: 1.5px solid #f0c99e; color: #783f0e; }
+    .feedback.ng { background: var(--red-bg); border: 1.5px solid #eab7b7; color: #7a2626; }
+
+    .fb-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .fb-list {
+      margin-top: 6px;
+      padding-left: 16px;
+      font-size: 12.8px;
+      color: var(--text-main);
+    }
+
+    .fb-list li { margin-bottom: 3px; }
+
+    /* 結算 */
+    .result-area {
+      display: none;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-area.show { display: block; }
+
+    .rank-emoji { font-size: 46px; margin-bottom: 4px; }
+    .final-score { font-size: 25px; font-weight: 800; color: #8b5615; }
+    .final-sub { font-size: 14px; color: var(--text-sub); margin: 4px 0 14px; }
+
+    .review-box {
+      text-align: left;
+      background: #fffaf0;
+      border: 1.5px solid var(--border-warm);
+      border-radius: 13px;
+      padding: 12px 14px;
+      font-size: 12.8px;
+    }
+
+    .review-box h3 {
+      font-size: 13.5px;
+      color: #6b5132;
+      margin-bottom: 6px;
+    }
+
+    .review-row {
+      padding: 5px 0;
+      border-bottom: 1px dashed #ead9bc;
+    }
+
+    .review-row:last-child { border-bottom: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="header">
+      <div class="header-top">
+        <span class="pill">🍱 飲食照護實戰挑戰</span>
+        <button class="cheat-btn" id="cheatBtn" type="button">💡 基本功小抄</button>
+      </div>
+      <h1>餐桌找碴＆照護紅綠燈</h1>
+      <div class="subtitle">有隱藏地雷與兩難陷阱題，小心別被「看起來很貼心」的選項騙囉！</div>
+    </div>
+
+    <div class="cheat-sheet" id="cheatSheet">
+      <b>📌 安全進食三大基本功＋紅綠燈口訣：</b>
+      <div class="cheat-cols">
+        <div class="cheat-card"><b>1. 環境單純</b>關電視、收衛生紙／假水果、白飯用深色碗、一次 1～2 道菜。</div>
+        <div class="cheat-card"><b>2. 姿勢與節奏</b>坐直 90 度、一口吞完再給下一口；不用粗吸管仰頭灌水。</div>
+        <div class="cheat-card"><b>3. 補水防便祕</b>小杯乾杯多次喝、愛玉蒸蛋補水；早餐後 20 分鐘帶坐馬桶。</div>
+        <div class="cheat-card"><b>4. 照護紅綠燈</b>🟢 日常調整 ｜ 🟠 安撫暫停 15 分鐘 ｜ 🔴 嗆咳／濕濁音立刻停＋通報！</div>
+      </div>
+    </div>
+
+    <div class="body-area">
+      <div id="playArea">
+        <div class="hud">
+          <span id="stageText">第 1 / 8 關</span>
+          <div class="hud-right">
+            <span class="combo-badge" id="comboText">🔥 連對 0</span>
+            <span id="scoreText">得分：0</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div id="questionContainer"></div>
+
+        <div class="feedback" id="feedbackBox">
+          <div class="fb-title" id="fbTitle"></div>
+          <div id="fbBody"></div>
+          <ul class="fb-list" id="fbList"></ul>
+          <button class="next-btn" id="nextBtn" type="button">下一關 ➡️</button>
+        </div>
+      </div>
+
+      <div class="result-area" id="resultArea">
+        <div class="rank-emoji" id="rankEmoji">🏆</div>
+        <div class="final-score" id="finalScore">0 / 8 關完全過關</div>
+        <div class="final-sub" id="finalSub"></div>
+
+        <div class="review-box">
+          <h3>📝 本次陷阱題與紅旗複習</h3>
+          <div id="reviewList"></div>
+        </div>
+
+        <button class="restart-btn" id="restartBtn" type="button">🔄 重新挑戰（隨機出題順序）</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STAGES = [
+      {
+        mode: "spot",
+        tag: "🔍 關卡類型 A｜餐桌找碴（複選題）",
+        title: "阿公有「路易氏體失智＋視覺空間感退化」，請點出這張餐桌上【所有 NG 的地方】！",
+        hint: "提示：這桌共有 3 個隱藏地雷，請全部找出來再按「檢查餐桌」（別誤點正確的做法喔）。",
+        items: [
+          { id: "a", icon: "🍚", text: "白色桌巾上放白瓷碗裝白飯", isNg: true, reason: "白底配白碗白飯，視覺退化長者會「看不見食物邊界」而拒吃或打翻，應改高對比深色碗。" },
+          { id: "b", icon: "📺", text: "餐桌旁開著大聲新聞電視", isNg: true, reason: "環境聲音過度刺激會讓長者分心、忘記咀嚼，甚至增加嗆咳風險。" },
+          { id: "c", icon: "🪑", text: "讓阿公坐直 90 度靠近桌緣", isNg: false, reason: "坐直 90 度是安全進食的正確姿勢！" },
+          { id: "d", icon: "🥄", text: "一次只擺一道菜跟一支湯匙", isNg: false, reason: "簡化餐具與菜色能減少選擇卡關，是正確做法！" },
+          { id: "e", icon: "🧻", text: "桌邊放了一大包衛生紙和反光玻璃杯", isNg: true, reason: "反光容易誘發視幻覺，衛生紙包也可能被誤拿去擦嘴或誤食，應先收走。" }
+        ]
+      },
+      {
+        mode: "spot",
+        tag: "🔍 關卡類型 A｜餐桌找碴（複選題）",
+        title: "阿嬤是「額顳葉型失智」，吃飯容易衝動狼吞虎嚥又愛拿別人東西，請找出這桌【2 個致命地雷】！",
+        hint: "提示：共有 2 個危險安排，小心別把正確做法當成 NG 喔！",
+        items: [
+          { id: "a", icon: "🍛", text: "一次端上超大盤堆滿的飯菜讓他自己吃", isNg: true, reason: "面對衝動快食長者，一次給大份量容易一口氣狂塞導致噎食，應改「小碟子分次給餐」。" },
+          { id: "b", icon: "🍇", text: "餐桌中央擺一盤漂亮的塑膠裝飾假水果", isNg: true, reason: "額顳葉長者煞車失靈，極可能把假水果或調味料瓶當食物放進嘴裡誤食！" },
+          { id: "c", icon: "🍮", text: "餐間安排少量小塊蒸蛋或軟質點心", isNg: false, reason: "分次小份、軟質點心是安全又好入口的安排。" },
+          { id: "d", icon: "📏", text: "與鄰座住民保持適當距離的安靜座位", isNg: false, reason: "拉開距離能避免搶食鄰座餐點引發衝突，很正確！" }
+        ]
+      },
+      {
+        mode: "spot",
+        tag: "🔍 關卡類型 A｜餐桌找碴（複選題）",
+        title: "中風後的「血管型失智阿公」喝水偶爾會慢半拍，家屬準備了以下喝水方式，請抓出【2 個危險動作】！",
+        hint: "提示：看似「幫忙喝水」的動作，其實藏著嗆咳大陷阱！",
+        items: [
+          { id: "a", icon: "🥤", text: "用粗吸管讓阿公仰起頭大口吸白開水", isNg: true, reason: "大陷阱！仰頭會打開氣道、粗吸管水流太快，極易直接嗆進氣管造成吸入性肺炎！" },
+          { id: "b", icon: "🥃", text: "用小水杯像「乾杯」一樣一小口慢慢喝", isNg: false, reason: "小口慢飲、控制單次水量是非常好的補水方式。" },
+          { id: "c", icon: "🥣", text: "趁嘴巴裡還含著上一口飯時，趕快配水吞下去", isNg: true, reason: "嘴裡還有食物就配水，最容易在吞嚥反射不同步時發生嗆咳！務必一口吞完再喝。" },
+          { id: "d", icon: "🍮", text: "偶爾改用愛玉、仙草或蒸蛋協助補水", isNg: false, reason: "半固體食物流速慢、好控制，是很棒的補水替代方案！" }
+        ]
+      },
+      {
+        mode: "spot",
+        tag: "🔍 關卡類型 A｜餐桌找碴（複選題）",
+        title: "照顧「阿茲海默症阿嬤」吃飯與如廁預防便祕時，哪【2 個做法是 NG 的】？",
+        hint: "提示：注意「記憶歸零」跟「補水防便祕」的細節！",
+        items: [
+          { id: "a", icon: "📱", text: "剛吃完又討吃時，拿手機拍空碗照片跟她爭辯「你看你明明吃過了」", isNg: true, reason: "就算看照片，她的近期記憶還是沒有存檔，硬爭辯只會讓她覺得被冤枉或生氣。" },
+          { id: "b", icon: "🚽", text: "每天早餐後 20 分鐘左右帶她去坐馬桶", isNg: false, reason: "利用早餐後的胃結腸反射，是預防便祕的黃金習慣！" },
+          { id: "c", icon: "🍪", text: "把一人份正餐拆成主餐＋餐間小點心", isNg: false, reason: "少量多餐既不傷胃，也能自然滿足她想再吃一點的需求。" },
+          { id: "d", icon: "💧", text: "怕她一直跑廁所，乾脆下午之後完全不給喝水", isNg: true, reason: "過度限水會導致脫水、泌尿道感染、便祕甚至急性譫妄！應白天分段足量補水。" }
+        ]
+      },
+      {
+        mode: "light",
+        tag: "🚦 關卡類型 B｜照護紅綠燈＋進階抉擇",
+        title: "阿公喝湯時突然咳嗽兩聲，接著說話聲音聽起來「濕濕濁濁的（像喉嚨卡水）」，但阿公說他還想繼續喝，這時該亮什麼燈、怎麼做？",
+        hint: "思考重點：出現「聲音變濕濁」代表什麼警訊？",
+        options: [
+          { text: "🟢 綠燈：拍拍背說「慢慢喝就好」，繼續把剩下的湯餵完。", correct: false },
+          { text: "🟠 黃燈：自己去廚房拿太白粉或增稠劑把湯勾芡後，再餵給他喝。", correct: false },
+          { text: "🔴 紅燈：立刻暫停進食與喝水，協助坐直清喉，並立即通報護理師／語言治療師評估。", correct: true },
+          { text: "🟠 黃燈：換成用吸管喝，這樣比較不會灑出來。", correct: false }
+        ],
+        explain: "喝水咳嗽＋「聲音濕濁」是典型的吞嚥困難／隱性嗆咳紅旗！切勿繼續餵食，也不可自行決定勾芡增稠（錯誤濃稠度反而更易嗆咳），必須立刻暫停並依 SOP 通報專業評估。"
+      },
+      {
+        mode: "light",
+        tag: "🚦 關卡類型 B｜照護紅綠燈＋進階抉擇",
+        title: "剛端上溫熱的飯菜，阿嬤卻把嘴巴緊閉、頭轉開拒絕吃飯，甚至把含在嘴裡的飯吐出來。以下哪個處理最正確？",
+        hint: "思考重點：記住「先看身體、再接情緒、最後處理行為」的順序！",
+        options: [
+          { text: "🔴 紅燈：立刻打電話叫救護車送急診。", correct: false },
+          { text: "🟠 黃燈：先不強迫！輕柔檢查是否牙痛、假牙不合或食物太燙，先暫停 15 分鐘讓她放鬆再試。", correct: true },
+          { text: "🟢 綠燈：趁她不注意講話張嘴時，趕快把湯匙塞進去避免營養不良。", correct: false },
+          { text: "🟠 黃燈：嚴肅告訴她「不吃飯身體會壞掉，快點張嘴」，講道理說服她。", correct: false }
+        ],
+        explain: "長者突然拒吃或吐飯，常常是「牙痛、嘴破、假牙鬆動、食物過燙或肚子脹」等身體不適！硬塞會造成嗆咳與恐懼，先停下來檢查不適、暫停 15 分鐘再溫和嘗試才是正解。"
+      },
+      {
+        mode: "light",
+        tag: "🚦 關卡類型 B｜照護紅綠燈＋進階抉擇",
+        title: "阿公把白色的藥丸吐出來，懷疑地說：「這顆白白的毒藥我不要吃！」怎麼接招最安全又不傷感情？",
+        hint: "思考重點：可以偷偷把藥磨粉混進正餐飯菜裡嗎？",
+        options: [
+          { text: "🟢 綠燈：趁阿公沒看到，自己把藥全部磨成粉拌進整碗白飯裡讓他吃掉。", correct: false },
+          { text: "🟠 黃燈：先同理他的擔心（不硬逼），換個時間或配一口他喜歡的溫水／果泥試試；若仍持續拒藥，回報護理師／藥師確認能否磨粉或調整劑型。", correct: true },
+          { text: "🟢 綠燈：今天不吃沒關係，直接把藥丟掉，也不用告訴任何人。", correct: false },
+          { text: "🔴 紅燈：跟他說「這是醫生開的你不吃就會死掉」，用嚇的讓他吞下去。", correct: false }
+        ],
+        explain: "陷阱提醒！很多藥物（如緩釋錠、腸溶錠）**絕對不能自行磨粉**，且整碗飯拌藥若沒吃完會導致劑量不足！正確做法是先安撫、不硬逼，並由護理師或藥師評估劑型與給藥時機。"
+      },
+      {
+        mode: "light",
+        tag: "🚦 關卡類型 B｜照護紅綠燈＋進階抉擇",
+        title: "昨天阿公還自己拿湯匙吃完整碗飯，今天中午卻「幾小時內突然變得眼神渙散、叫不太醒、嘴唇發乾且體溫偏高」，這時要亮什麼燈？",
+        hint: "思考重點：失智症 vs 急性譫妄／感染的關鍵差別是「變化速度」！",
+        options: [
+          { text: "🟢 綠燈：失智症本來就會這樣退化，讓他繼續睡覺補眠就好。", correct: false },
+          { text: "🟠 黃燈：可能是沒睡飽，等晚餐時間再搖醒他吃飯。", correct: false },
+          { text: "🔴 紅燈：這是「急性變化紅旗（疑似急性譫妄／感染）」，切勿強行餵食以免嗆咳，立即通報醫護評估！", correct: true },
+          { text: "🟢 綠燈：趕快端一大杯冰水灌醒他。", correct: false }
+        ],
+        explain: "失智症是數月到數年慢慢退化；「幾小時內突然意識混亂、嗜睡、發燒」高度懷疑是感染、脫水或急性譫妄！此時吞嚥保護反射很差，絕對不可強行灌水餵食，必須立刻通報醫護。"
+      }
+    ];
+
+    let deck = [];
+    let idx = 0;
+    let perfectCount = 0;
+    let combo = 0;
+    let selectedSet = new Set();
+    let stageLocked = false;
+    let reviewLog = [];
+
+    const cheatBtn = document.getElementById("cheatBtn");
+    const cheatSheet = document.getElementById("cheatSheet");
+    const playArea = document.getElementById("playArea");
+    const resultArea = document.getElementById("resultArea");
+    const stageText = document.getElementById("stageText");
+    const comboText = document.getElementById("comboText");
+    const scoreText = document.getElementById("scoreText");
+    const progressFill = document.getElementById("progressFill");
+    const questionContainer = document.getElementById("questionContainer");
+    const feedbackBox = document.getElementById("feedbackBox");
+    const fbTitle = document.getElementById("fbTitle");
+    const fbBody = document.getElementById("fbBody");
+    const fbList = document.getElementById("fbList");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    cheatBtn.addEventListener("click", () => {
+      const open = cheatSheet.classList.toggle("open");
+      cheatBtn.textContent = open ? "🙈 收起小抄" : "💡 基本功小抄";
+    });
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startGame() {
+      const spots = shuffle(STAGES.filter(s => s.mode === "spot"));
+      const lights = shuffle(STAGES.filter(s => s.mode === "light"));
+      deck = [];
+      for (let i = 0; i < 4; i++) {
+        deck.push(spots[i], lights[i]);
+      }
+      idx = 0;
+      perfectCount = 0;
+      combo = 0;
+      reviewLog = [];
+      playArea.style.display = "block";
+      resultArea.classList.remove("show");
+      renderStage();
+    }
+
+    function updateHud() {
+      stageText.textContent = `第 ${idx + 1} / ${deck.length} 關`;
+      comboText.textContent = `🔥 連對 ${combo}`;
+      scoreText.textContent = `過關：${perfectCount}`;
+      progressFill.style.width = `${(idx / deck.length) * 100}%`;
+    }
+
+    function renderStage() {
+      stageLocked = false;
+      selectedSet.clear();
+      feedbackBox.className = "feedback";
+      fbList.innerHTML = "";
+      updateHud();
+
+      const st = deck[idx];
+
+      if (st.mode === "spot") {
+        const itemsHtml = shuffle(st.items).map(it => `
+          <button type="button" class="item-tile" data-id="${it.id}">
+            <span class="item-icon">${it.icon}</span>
+            <span>${it.text}</span>
+          </button>
+        `).join("");
+
+        questionContainer.innerHTML = `
+          <span class="mode-tag mode-spot">${st.tag}</span>
+          <div class="q-box">
+            <div class="q-title">${st.title}</div>
+            <div class="q-hint">${st.hint}</div>
+          </div>
+          <div class="table-grid" id="tableGrid">${itemsHtml}</div>
+          <button type="button" class="check-btn" id="checkTableBtn" disabled>🔍 檢查餐桌（已選 0 項）</button>
+        `;
+
+        const checkBtn = document.getElementById("checkTableBtn");
+        const tiles = document.querySelectorAll(".item-tile");
+        tiles.forEach(tile => {
+          tile.addEventListener("click", () => {
+            if (stageLocked) return;
+            const id = tile.dataset.id;
+            if (selectedSet.has(id)) {
+              selectedSet.delete(id);
+              tile.classList.remove("selected");
+            } else {
+              selectedSet.add(id);
+              tile.classList.add("selected");
+            }
+            checkBtn.disabled = selectedSet.size === 0;
+            checkBtn.textContent = `🔍 檢查餐桌（已選 ${selectedSet.size} 項）`;
+          });
+        });
+
+        checkBtn.addEventListener("click", () => evaluateSpot(st));
+      } else {
+        const optsHtml = shuffle(st.options).map((op, i) => `
+          <button type="button" class="choice-btn" data-correct="${op.correct}" data-i="${i}">
+            <span>${op.text}</span>
+          </button>
+        `).join("");
+
+        questionContainer.innerHTML = `
+          <span class="mode-tag mode-light">${st.tag}</span>
+          <div class="q-box">
+            <div class="q-title">${st.title}</div>
+            <div class="q-hint">${st.hint}</div>
+          </div>
+          <div class="choice-list" id="choiceList">${optsHtml}</div>
+        `;
+
+        document.querySelectorAll(".choice-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            if (stageLocked) return;
+            evaluateLight(st, btn);
+          });
+        });
+      }
+    }
+
+    function evaluateSpot(st) {
+      stageLocked = true;
+      document.getElementById("checkTableBtn").style.display = "none";
+
+      let missed = 0;
+      let falsePos = 0;
+      let hits = 0;
+
+      const tiles = document.querySelectorAll(".item-tile");
+      tiles.forEach(tile => {
+        tile.disabled = true;
+        tile.classList.remove("selected");
+        const item = st.items.find(x => x.id === tile.dataset.id);
+        const picked = selectedSet.has(item.id);
+
+        if (item.isNg && picked) {
+          tile.classList.add("res-hit");
+          hits++;
+        } else if (item.isNg && !picked) {
+          tile.classList.add("res-missed");
+          missed++;
+        } else if (!item.isNg && picked) {
+          tile.classList.add("res-false");
+          falsePos++;
+        }
+      });
+
+      const isPerfect = missed === 0 && falsePos === 0;
+      if (isPerfect) {
+        perfectCount++;
+        combo++;
+        feedbackBox.className = "feedback show ok";
+        fbTitle.textContent = "✅ 太厲害！餐桌地雷全部抓出來了！";
+        fbBody.textContent = "你成功避開了所有干擾項，照顧細節超敏銳！";
+      } else if (hits > 0) {
+        combo = 0;
+        feedbackBox.className = "feedback show partial";
+        fbTitle.textContent = `⚠️ 差一點點！（抓對 ${hits} 個，漏抓 ${missed} 個，誤判 ${falsePos} 個）`;
+        fbBody.textContent = "有些看起來無害（或看起來像錯）的項目其實藏著關鍵原因：";
+      } else {
+        combo = 0;
+        feedbackBox.className = "feedback show ng";
+        fbTitle.textContent = "💡 這桌的地雷比較隱密喔！";
+        fbBody.textContent = "一起看看每個地雷為什麼危險：";
+      }
+
+      fbList.innerHTML = st.items
+        .filter(x => x.isNg)
+        .map(x => `<li><b>${x.icon} ${x.text}：</b>${x.reason}</li>`)
+        .join("");
+
+      reviewLog.push({ title: st.title, ok: isPerfect });
+      finishStep();
+    }
+
+    function evaluateLight(st, chosenBtn) {
+      stageLocked = true;
+      const isCorrect = chosenBtn.dataset.correct === "true";
+
+      document.querySelectorAll(".choice-btn").forEach(b => {
+        b.disabled = true;
+        if (b.dataset.correct === "true") {
+          b.classList.add("correct");
+        } else if (b === chosenBtn && !isCorrect) {
+          b.classList.add("wrong");
+        } else {
+          b.classList.add("dimmed");
+        }
+      });
+
+      if (isCorrect) {
+        perfectCount++;
+        combo++;
+        feedbackBox.className = "feedback show ok";
+        fbTitle.textContent = "✅ 判斷精準！這就是最安全的處理方式！";
+      } else {
+        combo = 0;
+        feedbackBox.className = "feedback show ng";
+        fbTitle.textContent = "🚨 小心！這個選項踩到常見照護地雷囉";
+      }
+
+      fbBody.textContent = st.explain;
+      reviewLog.push({ title: st.title, ok: isCorrect });
+      finishStep();
+    }
+
+    function finishStep() {
+      comboText.textContent = `🔥 連對 ${combo}`;
+      scoreText.textContent = `過關：${perfectCount}`;
+      progressFill.style.width = `${((idx + 1) / deck.length) * 100}%`;
+      nextBtn.textContent = idx === deck.length - 1 ? "查看挑戰結算 🏆" : "下一關 ➡️";
+    }
+
+    nextBtn.addEventListener("click", () => {
+      idx++;
+      if (idx < deck.length) {
+        renderStage();
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      playArea.style.display = "none";
+      resultArea.classList.add("show");
+
+      document.getElementById("finalScore").textContent = `${perfectCount} / ${deck.length} 關完全過關`;
+
+      let emoji = "💛";
+      let sub = "這組題目有刻意放進實務陷阱，再挑戰一次就能全部記熟！";
+      if (perfectCount === deck.length) {
+        emoji = "🏆";
+        sub = "滿分通關！餐桌地雷與紅綠燈通報界線完全難不倒你！";
+      } else if (perfectCount >= 6) {
+        emoji = "🌟";
+        sub = "表現超強！你已經具備很好的安全進食把關能力囉！";
+      }
+
+      document.getElementById("rankEmoji").textContent = emoji;
+      document.getElementById("finalSub").textContent = sub;
+
+      document.getElementById("reviewList").innerHTML = reviewLog.map((r, i) => `
+        <div class="review-row">
+          <b>${r.ok ? "✅" : "📌"} 第 ${i + 1} 關：</b>${r.title}
+        </div>
+      `).join("");
+    }
+
+    restartBtn.addEventListener("click", startGame);
+    startGame();
+  </script>
+</body>
+</html>
